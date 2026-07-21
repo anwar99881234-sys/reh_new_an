@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>رحلتك - وكيل السفر الذكي</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin:0; padding:0; }
+  body { font-family:'Tajawal', sans-serif; background:#0b141a; display:flex; justify-content:center; padding:20px; }
+  .phone { position:relative; width:420px; max-width:100%; background:#E5DDD5; border-radius:16px; overflow:hidden; box-shadow:0 10px 40px rgba(0,0,0,.5); display:flex; flex-direction:column; height:740px; }
+  .header { background:#075E54; color:#fff; padding:12px 14px; display:flex; align-items:center; gap:10px; flex-shrink:0; }
+  .avatar { width:38px; height:38px; border-radius:50%; background:#128C7E; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:700; flex-shrink:0; }
+  .hname { font-size:15px; font-weight:700; display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  .hstatus { font-size:11px; opacity:.85; }
+  .budget-pill { font-size:10.5px; background:rgba(255,255,255,.18); padding:1px 8px; border-radius:8px; margin-top:3px; display:none; }
+  .premium-badge { background:linear-gradient(135deg,#FFD700,#FFA500); color:#5c4a13; font-size:10px; font-weight:700; padding:2px 8px; border-radius:10px; cursor:pointer; border:none; }
+  .lang-badge { background:rgba(255,255,255,.18); color:#fff; font-size:13px; padding:2px 7px; border-radius:10px; cursor:pointer; border:none; line-height:1; }
+  .lang-badge:hover { background:rgba(255,255,255,.32); }
+  .tool-btn.active { background:#128C7E; color:#fff; border-color:#128C7E; }
+  .toolbar { display:none; gap:6px; padding:6px 12px; background:#ECE5DD; flex-shrink:0; flex-wrap:wrap; border-bottom:1px solid #ddd; }
+  .tool-btn { background:#fff; border:1px solid #ccc; border-radius:14px; padding:5px 10px; font-size:11px; cursor:pointer; color:#333; font-family:inherit; }
+  .tool-btn:hover { border-color:#128C7E; color:#075E54; }
+  .messages { flex:1; overflow-y:auto; padding:14px; display:flex; flex-direction:column; gap:7px;
+    background-image: linear-gradient(rgba(229,221,213,.97), rgba(229,221,213,.97)); }
+  .bubble { max-width:82%; padding:9px 13px; border-radius:9px; font-size:13.5px; line-height:1.6; white-space:pre-wrap; word-wrap:break-word; }
+  .bot { align-self:flex-start; background:#fff; color:#111; border-bottom-right-radius:2px; }
+  .user { align-self:flex-end; background:#DCF8C6; color:#111; border-bottom-left-radius:2px; }
+  .typing { align-self:flex-start; background:#fff; padding:10px 16px; border-radius:9px; display:flex; gap:4px; }
+  .dot { width:6px; height:6px; border-radius:50%; background:#999; animation: blink 1.2s infinite; }
+  .dot:nth-child(2){animation-delay:.2s} .dot:nth-child(3){animation-delay:.4s}
+  @keyframes blink { 0%,100%{opacity:.3} 50%{opacity:1} }
+  .quick-replies { display:flex; flex-wrap:wrap; gap:6px; align-self:flex-start; max-width:92%; }
+  .qr-btn { background:#fff; border:1px solid #128C7E; color:#075E54; border-radius:16px; padding:6px 12px; font-size:12.5px; cursor:pointer; font-family:inherit; }
+  .qr-btn:hover:not(:disabled) { background:#DCF8C6; }
+  .qr-btn:disabled { opacity:.45; cursor:default; }
+  .itin-card { align-self:flex-start; max-width:94%; background:#fff; border-radius:10px; padding:10px 12px; font-size:12.5px; }
+  .itin-card table { width:100%; border-collapse:collapse; margin-top:6px; }
+  .itin-card td, .itin-card th { border-bottom:1px solid #eee; padding:5px 4px; text-align:right; font-size:11.5px; }
+  .itin-card a { color:#075E54; text-decoration:underline; font-weight:700; }
+  .pdf-btn { margin-top:8px; background:#128C7E; color:#fff; border:none; border-radius:6px; padding:7px 12px; font-size:12px; cursor:pointer; font-family:inherit; }
+  .inputbar { display:flex; align-items:center; gap:8px; padding:10px; background:#F0F0F0; flex-shrink:0; }
+  .inputbar input { flex:1; border:none; border-radius:20px; padding:10px 14px; font-size:13.5px; font-family:inherit; outline:none; }
+  .sendbtn { background:#128C7E; color:#fff; border:none; border-radius:50%; width:38px; height:38px; cursor:pointer; font-size:16px; flex-shrink:0; }
+  .sendbtn:disabled { opacity:.5; cursor:not-allowed; }
+  .pinbtn { background:#fff; border:1px solid #128C7E; color:#075E54; border-radius:50%; width:38px; height:38px; cursor:pointer; font-size:15px; flex-shrink:0; display:none; align-items:center; justify-content:center; }
+  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.55); display:none; align-items:center; justify-content:center; z-index:50; }
+  .modal-overlay.open { display:flex; }
+  .modal { background:#fff; border-radius:12px; padding:20px; width:320px; max-width:90%; font-size:13px; }
+  .modal h3 { font-size:16px; margin-bottom:10px; color:#075E54; }
+  .modal ul { margin:0 0 14px; padding-right:18px; line-height:1.9; }
+  .modal-close { background:#128C7E; color:#fff; border:none; border-radius:6px; padding:9px 14px; font-size:13px; cursor:pointer; width:100%; font-family:inherit; }
+  .toast { position:absolute; top:74px; left:50%; transform:translateX(-50%); background:#075E54; color:#fff; padding:8px 16px; border-radius:20px; font-size:12px; z-index:60; opacity:0; pointer-events:none; transition:opacity .3s; max-width:88%; text-align:center; }
+  .toast.show { opacity:1; }
+  #pdf-render-target { position:fixed; top:-9999px; left:-9999px; width:460px; background:#fff; padding:16px; font-family:'Tajawal',sans-serif; direction:rtl; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="header">
+    <div class="avatar">ر</div>
+    <div style="flex:1">
+      <div class="hname">رحلتك <button class="lang-badge" id="langBadge" onclick="showLangPicker()" title="غيّر اللغة">🌐</button> <button class="premium-badge" id="premiumBadge" onclick="openPremium()">🏨 الحجز</button></div>
+      <div class="hstatus" id="statusline">متصل الآن</div>
+      <div class="budget-pill" id="budgetPill"></div>
+    </div>
+  </div>
+
+  <div class="toolbar" id="toolbar"></div>
+
+  <div class="messages" id="messages"></div>
+  <div class="toast" id="toast"></div>
+
+  <div class="inputbar">
+    <button class="pinbtn" id="pinBtn" onclick="shareLocation()">📍</button>
+    <input id="userInput" type="text" placeholder="اكتب رسالتك..." onkeydown="if(event.key==='Enter') sendMessage()">
+    <button class="sendbtn" id="sendBtn" onclick="sendMessage()">➤</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="premiumModal">
+  <div class="modal">
+    <h3 id="premiumTitle">🏨 الحجز الفعلي</h3>
+    <ul id="premiumList"></ul>
+    <div id="premiumNote" style="font-size:11.5px;color:#666;background:#f5f5f5;border-radius:8px;padding:8px 10px;margin-bottom:12px;line-height:1.7"></div>
+    <button class="modal-close" id="subscribeBtn" onclick="subscribePremium()" style="margin-bottom:8px;background:linear-gradient(135deg,#FFD700,#FFA500);color:#5c4a13;font-weight:700;">اشترك الآن</button>
+    <button class="modal-close" onclick="closePremium()" style="background:#ccc;color:#333;"><span id="closeBtnText">رجوع</span></button>
+  </div>
+</div>
+
+<div id="pdf-render-target"></div>
+
+<script>
+/* ============ الحالة العامة ============ */
+let state = {
+  language: null,          // 'ar-om' | 'en'
+  name: null, age: null,
+  destination: null, destCoords: null,
+  startDate: null, duration: null,
+  companions: null, specialNeeds: null, healthConditions: null,
+  accommodationType: null, experienceTypes: null,
+  budgetTotal: null, budgetSpent: 0,
+  isPremium: false, tripConfirmed: false, lastAlertedDay: null,
+  greeted: false, liveTracking: false, currentCoords: null,
+  bookings: [], userId: null
+};
+let messages = [];          // history المرسلة إلى Claude
+let latestItinerary = null;
+let monitorInterval = null;
+let watchId = null;
+let lastTrackCoords = null, lastTrackTime = 0;
+const TRACK_MIN_MOVE_M = 250;        // أقل مسافة تحرك قبل ما ننبّه الوكيل
+const TRACK_MIN_INTERVAL_MS = 4*60*1000; // أقل فاصل زمني بين التنبيهات
+
+/* ============ قاعدة البيانات (تخزين محلي مع حماية) ============ */
+/* تشتغل لما تفتح الملف بمتصفحك مباشرة وتحفظ بين الجلسات.
+   لو التخزين محجوب (مثلاً داخل معاينة مقيّدة) ترجع لذاكرة مؤقتة بدون ما ينهار التطبيق.
+   لمنتج حقيقي متعدد المستخدمين، استبدل هالطبقة بقاعدة بيانات على سيرفر (Firebase/Supabase/…). */
+const DB_KEY = 'rehlatak_db';
+let memStore = {};
+function storageGet(k){
+  try{ const v = window.localStorage.getItem(k); return v; }
+  catch(e){ return (k in memStore) ? memStore[k] : null; }
+}
+function storageSet(k,v){
+  try{ window.localStorage.setItem(k,v); }
+  catch(e){ memStore[k] = v; }
+}
+function storageRemove(k){
+  try{ window.localStorage.removeItem(k); }catch(e){ delete memStore[k]; }
+}
+
+function loadDB(){
+  try{ const raw = storageGet(DB_KEY); return raw ? JSON.parse(raw) : null; }
+  catch(e){ return null; }
+}
+// يحفظ لقطة كاملة: الملف الشخصي + آخر خطة + الحجوزات + الميزانية
+function persist(){
+  const db = {
+    updatedAt: new Date().toISOString(),
+    userId: state.userId || ('u_' + Date.now()),
+    language: state.language,
+    isPremium: state.isPremium,
+    profile: {
+      name: state.name, age: state.age,
+      companions: state.companions, specialNeeds: state.specialNeeds,
+      healthConditions: state.healthConditions,
+      accommodationType: state.accommodationType, experienceTypes: state.experienceTypes
+    },
+    lastTrip: {
+      destination: state.destination, startDate: state.startDate,
+      duration: state.duration,
+      budgetTotal: state.budgetTotal, budgetSpent: state.budgetSpent,
+      itinerary: latestItinerary ? latestItinerary.raw : null
+    },
+    bookings: state.bookings || []
+  };
+  state.userId = db.userId;
+  storageSet(DB_KEY, JSON.stringify(db));
+}
+function clearData(){
+  storageRemove(DB_KEY);
+  showToast(state.language==='en' ? 'Saved data cleared.' : 'تم مسح البيانات المحفوظة.');
+  setTimeout(()=>location.reload(), 700);
+}
+
+function scrollBottom(){
+  const m = document.getElementById('messages');
+  m.scrollTop = m.scrollHeight;
+}
+
+/* ============ فقاعات المحادثة ============ */
+function addBubble(role, text, {isItinerary=false} = {}){
+  const container = document.getElementById('messages');
+  if(isItinerary){
+    container.appendChild(buildItineraryCard(text));
+  } else {
+    const div = document.createElement('div');
+    div.className = 'bubble ' + (role === 'user' ? 'user' : 'bot');
+    div.textContent = text;
+    container.appendChild(div);
+  }
+  scrollBottom();
+}
+
+function addQuickReplies(options, handler){
+  const container = document.getElementById('messages');
+  const row = document.createElement('div');
+  row.className = 'quick-replies';
+  options.forEach(opt=>{
+    const btn = document.createElement('button');
+    btn.className = 'qr-btn';
+    btn.textContent = opt;
+    btn.onclick = () => {
+      row.querySelectorAll('button').forEach(b => b.disabled = true);
+      if(handler) handler(opt); else sendMessage(opt);
+    };
+    row.appendChild(btn);
+  });
+  container.appendChild(row);
+  scrollBottom();
+}
+
+function showTyping(){
+  const container = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = 'typing';
+  div.id = 'typingIndicator';
+  div.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
+  container.appendChild(div);
+  scrollBottom();
+}
+function hideTyping(){
+  const t = document.getElementById('typingIndicator');
+  if(t) t.remove();
+}
+
+function showToast(text){
+  const t = document.getElementById('toast');
+  t.textContent = text;
+  t.classList.add('show');
+  setTimeout(()=> t.classList.remove('show'), 3800);
+}
+
+/* ============ جدول الخطة + روابط خرائط حقيقية (بدون مفتاح API) ============ */
+function mapsSearchLink(place, destination){
+  const q = destination ? `${place} ${destination}` : place;
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
+}
+// نسخة قصيرة ومقروءة للرابط تنعرض كنص داخل الـ PDF (قابلة للنسخ)
+function displayMapUrl(place, destination){
+  const q = (destination ? `${place} ${destination}` : place).trim();
+  return 'google.com/maps?q=' + q.replace(/\s+/g,'+');
+}
+
+function parseMarkdownTable(text){
+  const lines = text.split('\n').map(l=>l.trim()).filter(l=>l.includes('|'));
+  const rows = lines.filter(l => !/^\|?[\s:\-|]+\|?$/.test(l));
+  return rows.map(l => l.replace(/^\||\|$/g,'').split('|').map(c=>c.trim()));
+}
+
+function buildItineraryCard(text){
+  const wrap = document.createElement('div');
+  wrap.className = 'itin-card';
+  const hasTable = (text.match(/\|/g) || []).length > 6;
+  const introText = text.split('\n').filter(l => !l.includes('|')).join(' ').trim();
+  if(introText){
+    const p = document.createElement('div');
+    p.textContent = introText;
+    p.style.marginBottom = '6px';
+    wrap.appendChild(p);
+  }
+  if(hasTable){
+    const rows = parseMarkdownTable(text);
+    const links = rows.map((r,i) => i===0 ? null : mapsSearchLink(r[r.length-1], state.destination));
+    const table = document.createElement('table');
+    rows.forEach((r,i)=>{
+      const tr = document.createElement('tr');
+      r.forEach((cell, ci)=>{
+        const cellEl = document.createElement(i===0 ? 'th' : 'td');
+        if(i>0 && ci===r.length-1){
+          const a = document.createElement('a');
+          a.href = links[i]; a.target = '_blank'; a.rel = 'noopener';
+          a.textContent = '📍 ' + cell;
+          cellEl.appendChild(a);
+        } else {
+          cellEl.textContent = cell;
+        }
+        tr.appendChild(cellEl);
+      });
+      table.appendChild(tr);
+    });
+    wrap.appendChild(table);
+    latestItinerary = { rows, links, raw: text };
+
+    const btn = document.createElement('button');
+    btn.className = 'pdf-btn';
+    btn.textContent = state.language==='en' ? '📄 Download plan as PDF' : '📄 تحميل الخطة كملف PDF';
+    btn.onclick = () => generatePDF(rows, links);
+    wrap.appendChild(btn);
+  }
+  return wrap;
+}
+
+function generatePDF(rows, links){
+  const target = document.getElementById('pdf-render-target');
+  const isEn = state.language==='en';
+  const name = state.name || (isEn ? 'our guest' : 'ضيفنا العزيز');
+  const linkHeader = isEn ? 'Map link' : 'رابط الخريطة';
+
+  let html = `<div style="text-align:center;margin-bottom:14px">
+    <div style="font-size:20px;font-weight:700;color:#075E54">رحلتك</div>
+    <div style="font-size:13px;color:#666">${isEn ? `Trip plan prepared for ${name}` : `خطة رحلة مُعدّة خصيصاً لـ ${name}`}</div>
+  </div>`;
+  html += '<table id="pdfTable" style="width:100%;border-collapse:collapse;font-size:11px">';
+  rows.forEach((r,i)=>{
+    html += '<tr>';
+    r.forEach(cell=>{
+      const tag = i===0 ? 'th' : 'td';
+      const style = i===0
+        ? 'background:#075E54;color:#fff;padding:6px;border:1px solid #ccc;text-align:right'
+        : 'padding:6px;border:1px solid #ddd;text-align:right';
+      html += `<${tag} style="${style}">${cell}</${tag}>`;
+    });
+    if(i===0){
+      html += `<th style="background:#075E54;color:#fff;padding:6px;border:1px solid #ccc;text-align:center">${linkHeader}</th>`;
+    } else {
+      const disp = displayMapUrl(r[r.length-1], state.destination);
+      html += `<td style="padding:6px;border:1px solid #ddd;text-align:left;direction:ltr;color:#075E54;font-size:8.5px;word-break:break-all">🔗 ${disp}</td>`;
+    }
+    html += '</tr>';
+  });
+  html += '</table>';
+  target.innerHTML = html;
+
+  html2canvas(target, {scale:2}).then(canvas => {
+    const imgData = canvas.toDataURL('image/png');
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('p','mm','a4');
+    const pageWidth = 190;
+    const imgHeight = canvas.height * pageWidth / canvas.width;
+    pdf.addImage(imgData, 'PNG', 10, 10, pageWidth, imgHeight);
+
+    const targetRect = target.getBoundingClientRect();
+    const factor = pageWidth / targetRect.width;
+    const trs = target.querySelectorAll('#pdfTable tr');
+    trs.forEach((tr,i)=>{
+      if(i===0) return;
+      const tds = tr.querySelectorAll('td');
+      const linkTd = tds[tds.length-1];
+      if(!linkTd) return;
+      const tdRect = linkTd.getBoundingClientRect();
+      const x = 10 + (tdRect.left - targetRect.left) * factor;
+      const y = 10 + (tdRect.top - targetRect.top) * factor;
+      const w = tdRect.width * factor;
+      const h = tdRect.height * factor;
+      const url = links[i];
+      if(url) pdf.link(x, y, w, h, {url});
+    });
+
+    pdf.save(isEn ? 'rehlatak_plan.pdf' : 'خطة_رحلتك.pdf');
+  }).catch(err => {
+    addBubble('assistant', isEn ? "Something went wrong generating the PDF, please try again." : 'صار خطأ بتجهيز الملف، جرب مرة ثانية.');
+    console.error(err);
+  });
+}
+
+/* ============ الميزانية ============ */
+function renderBudgetCard(){
+  const old = document.getElementById('budgetCard');
+  if(old) old.remove();
+  const isEn = state.language==='en';
+  const remaining = (state.budgetTotal||0) - (state.budgetSpent||0);
+  const pct = state.budgetTotal ? Math.min(100, Math.round((state.budgetSpent/state.budgetTotal)*100)) : 0;
+  const label = isEn
+    ? `💰 Budget: spent ${state.budgetSpent} of ${state.budgetTotal} OMR — remaining ${remaining} OMR`
+    : `💰 الميزانية: صرفت ${state.budgetSpent} من ${state.budgetTotal} ر.ع — المتبقي ${remaining} ر.ع`;
+  const el = document.createElement('div');
+  el.id = 'budgetCard';
+  el.className = 'itin-card';
+  el.innerHTML = `<div style="font-weight:700;margin-bottom:6px">${label}</div>
+    <div style="background:#eee;border-radius:6px;height:8px;overflow:hidden">
+      <div style="background:${pct>90?'#D32F2F':'#128C7E'};height:100%;width:${pct}%"></div>
+    </div>`;
+  document.getElementById('messages').appendChild(el);
+  updateBudgetPill();
+  scrollBottom();
+}
+function updateBudgetPill(){
+  const pill = document.getElementById('budgetPill');
+  if(state.budgetTotal==null){ pill.style.display='none'; return; }
+  const remaining = state.budgetTotal - (state.budgetSpent||0);
+  pill.style.display = 'inline-block';
+  pill.textContent = state.language==='en' ? `💰 ${remaining} OMR left` : `💰 متبقي ${remaining} ر.ع`;
+}
+
+/* ============ الطقس (Open-Meteo - مجاني بدون مفتاح) ============ */
+// fetch مع مهلة زمنية بدون AbortSignal
+// (بعض البيئات المقيّدة تمرّر fetch عبر postMessage وما تقدر تنسخ AbortSignal، فنتجنّبه)
+function fetchWithTimeout(url, ms=8000){
+  return Promise.race([
+    fetch(url),
+    new Promise((_, reject)=> setTimeout(()=> reject(new Error('timeout')), ms))
+  ]);
+}
+
+/* ============ جدول إحداثيات عُماني جاهز (يشتغل بدون نت) ============ */
+// يغطي أشهر الوجهات، فتحديد الموقع يصير فوري بدون أي طلب شبكة
+const OMAN_PLACES = [
+  { keys:['مسقط','muscat'], lat:23.588, lng:58.408, label:'مسقط' },
+  { keys:['مطرح','mutrah','matrah'], lat:23.617, lng:58.563, label:'مطرح' },
+  { keys:['صلالة','salalah','ظفار','dhofar'], lat:17.019, lng:54.089, label:'صلالة' },
+  { keys:['نزوى','nizwa'], lat:22.933, lng:57.533, label:'نزوى' },
+  { keys:['صور','sur'], lat:22.567, lng:59.529, label:'صور' },
+  { keys:['صحار','sohar'], lat:24.347, lng:56.709, label:'صحار' },
+  { keys:['خصب','مسندم','khasab','musandam'], lat:26.179, lng:56.246, label:'خصب / مسندم' },
+  { keys:['الجبل الأخضر','جبل اخضر','jebel akhdar','jabal akhdar','green mountain'], lat:23.073, lng:57.664, label:'الجبل الأخضر' },
+  { keys:['جبل شمس','jebel shams','jabal shams'], lat:23.237, lng:57.263, label:'جبل شمس' },
+  { keys:['الشرقية','رمال','وهيبة','بدية','wahiba','sharqiya sands','bidiyah'], lat:22.161, lng:58.812, label:'رمال الشرقية' },
+  { keys:['رأس الجنز','راس الجنز','رأس الحد','ras al jinz','ras al hadd'], lat:22.417, lng:59.833, label:'رأس الجنز' },
+  { keys:['وادي شاب','wadi shab'], lat:22.845, lng:59.240, label:'وادي شاب' },
+  { keys:['وادي بني خالد','wadi bani khalid'], lat:22.596, lng:59.132, label:'وادي بني خالد' },
+  { keys:['بيمة','حوية نجم','سنكهول','bimmah','sinkhole'], lat:22.943, lng:59.078, label:'حوية نجم (بيمة)' },
+  { keys:['الدقم','duqm'], lat:19.670, lng:57.705, label:'الدقم' },
+  { keys:['بهلاء','bahla'], lat:22.965, lng:57.301, label:'بهلاء' },
+  { keys:['الرستاق','rustaq'], lat:23.390, lng:57.424, label:'الرستاق' },
+  { keys:['الحمرا','الحمراء','al hamra','مسفاة','مسفاة العبريين','misfat'], lat:23.115, lng:57.298, label:'الحمراء' },
+  { keys:['بركاء','barka'], lat:23.679, lng:57.888, label:'بركاء' },
+  { keys:['مصيرة','masirah'], lat:20.410, lng:58.800, label:'مصيرة' },
+  { keys:['عبري','ibri'], lat:23.225, lng:56.516, label:'عبري' },
+  { keys:['ابراء','ابرا','ibra'], lat:22.690, lng:58.533, label:'إبراء' },
+  { keys:['بدبد','bidbid'], lat:23.410, lng:58.128, label:'بدبد' },
+  { keys:['السيب','seeb','al seeb'], lat:23.670, lng:58.189, label:'السيب' }
+];
+function normalizeAr(s){
+  return (s||'').toLowerCase()
+    .replace(/[أإآ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه')
+    .replace(/[ًٌٍَُِّْ]/g,'').trim();
+}
+function localGeocode(name){
+  const n = normalizeAr(name);
+  if(!n) return null;
+  for(const p of OMAN_PLACES){
+    if(p.keys.some(k => n.includes(normalizeAr(k)))) return { lat:p.lat, lng:p.lng, label:p.label };
+  }
+  return null;
+}
+
+let netBlockedNotified = false; // نتجنّب تكرار رسائل فشل الشبكة
+async function geocodeDestination(name){
+  // 1) الجدول المحلي أولاً (فوري، بدون نت) — يغطي أغلب وجهات عُمان
+  const local = localGeocode(name);
+  if(local) return local;
+  // 2) لو مو بالجدول، نجرّب الشبكة (تشتغل بالمتصفح العادي)
+  const lang = state.language==='en' ? 'en' : 'ar';
+  try{
+    const res = await fetchWithTimeout(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(name)}&count=1&language=${lang}&format=json`);
+    if(res.ok){
+      const data = await res.json();
+      if(data.results && data.results.length){
+        const r = data.results[0];
+        return { lat:r.latitude, lng:r.longitude, label:r.name };
+      }
+    }
+  }catch(e){ noteNetBlocked(); }
+  try{
+    const res = await fetchWithTimeout(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(name)}`);
+    if(res.ok){
+      const data = await res.json();
+      if(data && data.length){
+        return { lat:parseFloat(data[0].lat), lng:parseFloat(data[0].lon), label:data[0].display_name };
+      }
+    }
+  }catch(e){ noteNetBlocked(); }
+  return null; // المحادثة تكمل عادي؛ المراقبة الحية تحتاج نت (تشتغل بالمتصفح)
+}
+function noteNetBlocked(){
+  if(!netBlockedNotified){
+    netBlockedNotified = true;
+    console.info('ℹ️ الاتصال بالإنترنت محجوب في هذه المعاينة — الطقس والخرائط الحيّة تشتغل لما تفتح الملف بمتصفحك مباشرة. (المحادثة والتخطيط شغّالين عادي.)');
+  }
+}
+
+async function fetchWeather(lat,lng){
+  const res = await fetchWithTimeout(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&daily=weathercode,precipitation_probability_max,windspeed_10m_max,temperature_2m_max&timezone=auto&forecast_days=5`);
+  return res.json();
+}
+
+function detectDanger(w){
+  if(!w || !w.daily) return { isDanger:false };
+  const dangerCodes = [65,66,67,82,95,96,99];
+  for(let i=0; i<Math.min(3, w.daily.time.length); i++){
+    const code = w.daily.weathercode[i];
+    const rainProb = w.daily.precipitation_probability_max ? w.daily.precipitation_probability_max[i] : 0;
+    const wind = w.daily.windspeed_10m_max ? w.daily.windspeed_10m_max[i] : 0;
+    if(dangerCodes.includes(code) || rainProb>=75 || wind>=55){
+      const reason = state.language==='en'
+        ? `High chance of severe weather (rain ${rainProb}%, wind ${wind} km/h) on ${w.daily.time[i]}`
+        : `احتمال طقس سيء (فرصة أمطار ${rainProb}٪، رياح ${wind} كم/س) يوم ${w.daily.time[i]}`;
+      return { isDanger:true, day: w.daily.time[i], reason };
+    }
+  }
+  return { isDanger:false };
+}
+
+async function monitorLoop(){
+  if(!state.tripConfirmed || !state.destCoords) return;
+  try{
+    const w = await fetchWeather(state.destCoords.lat, state.destCoords.lng);
+    const d = detectDanger(w);
+    if(d.isDanger && d.day !== state.lastAlertedDay){
+      state.lastAlertedDay = d.day;
+      triggerSystemEvent(`[نظام] رصدنا حالة طقس خطيرة فعلية عبر واجهة الطقس في ${state.destination || 'وجهة الرحلة'}: ${d.reason}. اتبع القاعدة رقم 8.`);
+    }
+  }catch(e){ noteNetBlocked(); } // فشل الطقس صامت — يشتغل بالمتصفح العادي
+}
+
+// المراقبة اللحظية للطقس صارت مجانية (مش بريميوم)
+function maybeStartMonitoring(){
+  if(state.tripConfirmed && state.destCoords && !monitorInterval){
+    monitorLoop();
+    monitorInterval = setInterval(monitorLoop, 60000);
+  }
+}
+
+/* ============ التتبّع المباشر أثناء الرحلة (مجاني) ============ */
+function haversine(a,b){
+  const R=6371000, toRad=x=>x*Math.PI/180;
+  const dLat=toRad(b.lat-a.lat), dLng=toRad(b.lng-a.lng);
+  const s=Math.sin(dLat/2)**2 + Math.cos(toRad(a.lat))*Math.cos(toRad(b.lat))*Math.sin(dLng/2)**2;
+  return 2*R*Math.asin(Math.sqrt(s));
+}
+
+// فحص الطقس عند موقع المستخدم الحالي (يشترك مع منطق الطقس نفسه)
+async function liveWeatherCheck(lat,lng){
+  try{
+    const w = await fetchWeather(lat,lng);
+    const d = detectDanger(w);
+    if(d.isDanger && d.day !== state.lastAlertedDay){
+      state.lastAlertedDay = d.day;
+      triggerSystemEvent(`[نظام] رصدنا حالة طقس خطيرة فعلية قرب موقع المستخدم الحالي عبر واجهة الطقس: ${d.reason}. اتبع القاعدة رقم 8.`);
+    }
+  }catch(e){ console.error('live weather failed', e); }
+}
+
+function onTrackUpdate(pos){
+  const { latitude, longitude } = pos.coords;
+  const here = { lat:latitude, lng:longitude };
+  state.currentCoords = here;
+  const now = Date.now();
+  if(lastTrackCoords){
+    const moved = haversine(lastTrackCoords, here);
+    if(moved < TRACK_MIN_MOVE_M && (now-lastTrackTime) < TRACK_MIN_INTERVAL_MS) return; // تهدئة: ما ننبّه إلا لو تحرّك فعلاً
+  }
+  lastTrackCoords = here; lastTrackTime = now;
+  liveWeatherCheck(latitude, longitude);
+  const isEn = state.language==='en';
+  triggerSystemEvent(isEn
+    ? `[نظام] Live tracking: the user is now near ${latitude.toFixed(4)}, ${longitude.toFixed(4)} during the trip. If close to a scheduled stop, give one short helpful note; if anything needs attention (delay, closure, weather) alert them; otherwise reply very briefly.`
+    : `[نظام] تتبّع مباشر: المستخدم الآن قريب من ${latitude.toFixed(4)}, ${longitude.toFixed(4)} أثناء الرحلة. إذا قريب من نشاط مجدول أعطه ملاحظة قصيرة مفيدة، وإذا فيه شي يستدعي الانتباه (تأخير/إغلاق/طقس) نبّهه، وإلا رد باختصار شديد.`);
+}
+function onTrackErr(){
+  showToast(state.language==='en' ? "Couldn't access location — allow permission." : "ما قدرت أوصل لموقعك، تأكد من صلاحية الموقع 🙏");
+  stopLiveTrack();
+}
+
+function toggleLiveTrack(){
+  if(watchId != null){ stopLiveTrack(); return; }
+  if(!navigator.geolocation){ showToast(state.language==='en'?"Location not supported":"المتصفح ما يدعم الموقع"); return; }
+  watchId = navigator.geolocation.watchPosition(onTrackUpdate, onTrackErr, { enableHighAccuracy:true, maximumAge:15000, timeout:20000 });
+  state.liveTracking = true;
+  showToast(state.language==='en'?'🛰️ Live trip tracking on':'🛰️ التتبّع المباشر شغّال');
+  if(state.tripConfirmed) showToolbar();
+}
+function stopLiveTrack(){
+  if(watchId != null){ navigator.geolocation.clearWatch(watchId); watchId = null; }
+  state.liveTracking = false; lastTrackCoords = null;
+  if(state.tripConfirmed) showToolbar();
+}
+
+/* ============ أزرار الاختبار (طقس / ازدحام) ============ */
+function testWeatherAlert(){
+  const msg = state.language==='en'
+    ? `[نظام] TEST TRIGGER: severe weather detected (heavy rain + strong wind) at tomorrow's outdoor activity location. Follow rule 8.`
+    : `[نظام] اختبار: تم رصد حالة طقس خطيرة (أمطار غزيرة ورياح قوية) بمكان النشاط الخارجي المجدول ليوم بكرة. اتبع القاعدة رقم 8.`;
+  triggerSystemEvent(msg);
+}
+function testTrafficAlert(){
+  const msg = state.language==='en'
+    ? `[نظام] TEST TRIGGER: heavy traffic congestion / road closure detected on the route to the next scheduled activity (Google Maps). Follow rule 8.`
+    : `[نظام] اختبار: تم رصد ازدحام مروري شديد / إغلاق بالطريق المؤدي للنشاط القادم بالجدول (عبر خرائط جوجل). اتبع القاعدة رقم 8.`;
+  triggerSystemEvent(msg);
+}
+
+/* ============ مشاركة الموقع الحي (بدون مفتاح API) ============ */
+function shareLocation(){
+  if(!navigator.geolocation){
+    addBubble('assistant', state.language==='en' ? "This browser doesn't support location sharing." : "المتصفح ما يدعم مشاركة الموقع 😕");
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(pos=>{
+    const { latitude, longitude } = pos.coords;
+    const link = `https://www.google.com/maps?q=${latitude},${longitude}`;
+    const label = state.language==='en' ? '📍 Live location shared' : '📍 تم إرسال موقعك الحالي';
+    const div = document.createElement('div');
+    div.className = 'bubble user';
+    div.innerHTML = `${label}<br><a href="${link}" target="_blank" rel="noopener" style="color:#075E54;font-weight:700">${link}</a>`;
+    document.getElementById('messages').appendChild(div);
+    scrollBottom();
+    const hidden = state.language==='en'
+      ? `[نظام] User shared live location: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}. If relevant to a scheduled stop, give a short useful note; otherwise reply briefly confirming you're tracking their trip.`
+      : `[نظام] المستخدم شارك موقعه الحالي: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}. إذا كان قريب من نشاط مجدول أعطه ملاحظة قصيرة مفيدة، وإلا رد برسالة قصيرة تؤكد إنك مستلم موقعه وتراقب رحلته.`;
+    triggerSystemEvent(hidden);
+  }, ()=>{
+    addBubble('assistant', state.language==='en' ? "Couldn't access your location — please allow location permission." : "ما قدرت أوصل لموقعك، تأكد من صلاحية الموقع بالمتصفح 🙏");
+  });
+}
+
+/* ============ بريميوم (اشتراك تجريبي) ============ */
+function openPremium(){
+  const isEn = state.language==='en';
+  document.getElementById('premiumTitle').textContent = isEn ? '🏨 Real Booking' : '🏨 الحجز الفعلي';
+  document.getElementById('premiumList').innerHTML = isEn ? `
+    <li>🏨 Real, confirmed hotel reservations with our partner hotels</li>
+    <li>🏡 Authentic homestays with verified Omani families</li>
+    <li>💰 Best contracted rates (we're partnered directly — B2B)</li>
+    <li>✅ Instant booking confirmation with a reference number</li>
+    <li>👤 Human support to handle your reservation end-to-end</li>` : `
+    <li>🏨 حجوزات فنادق فعلية ومؤكدة مع فنادقنا الشريكة</li>
+    <li>🏡 استضافات أصيلة مع عائلات عُمانية موثّقة</li>
+    <li>💰 أفضل الأسعار المتعاقد عليها (شراكة مباشرة — B2B)</li>
+    <li>✅ تأكيد حجز فوري برقم مرجعي</li>
+    <li>👤 دعم بشري يتكفّل بحجزك من البداية للنهاية</li>`;
+  document.getElementById('premiumNote').innerHTML = isEn
+    ? `<b>All free:</b> trip planning, weather alerts, live tracking, traffic & plan updates, PDF, budget.<br><b>This unlocks:</b> actual hotel & Omani-family bookings through our partners.`
+    : `<b>كل هذا مجاني:</b> التخطيط، تنبيهات الطقس، التتبّع المباشر، تنبيهات الازدحام وتحديث الخطة، الـ PDF، الميزانية.<br><b>هذا يفتح لك:</b> الحجز الفعلي للفنادق والاستضافة مع عائلات عُمانية عبر شركائنا.`;
+  const subBtn = document.getElementById('subscribeBtn');
+  if(state.isPremium){
+    subBtn.textContent = isEn ? '✕ Turn off booking (for testing)' : '✕ إلغاء تفعيل الحجز (للتجربة)';
+    subBtn.disabled = false; subBtn.style.opacity = 1;
+    subBtn.style.background = '#e0e0e0'; subBtn.style.color = '#333';
+    subBtn.onclick = deactivatePremium;
+  } else {
+    subBtn.textContent = isEn ? 'Enable real booking (demo)' : 'فعّل الحجز الفعلي (تجريبي)';
+    subBtn.disabled = false; subBtn.style.opacity = 1;
+    subBtn.style.background = 'linear-gradient(135deg,#FFD700,#FFA500)'; subBtn.style.color = '#5c4a13';
+    subBtn.onclick = subscribePremium;
+  }
+  document.getElementById('closeBtnText').textContent = isEn ? 'Back' : 'رجوع';
+  document.getElementById('premiumModal').classList.add('open');
+}
+function closePremium(){ document.getElementById('premiumModal').classList.remove('open'); }
+
+function subscribePremium(){
+  if(state.isPremium) return;
+  const isEn = state.language==='en';
+  const subBtn = document.getElementById('subscribeBtn');
+  // محاكاة عملية اشتراك تجريبية (بدون دفع فعلي)
+  subBtn.disabled = true;
+  subBtn.textContent = isEn ? '⏳ Activating…' : '⏳ جاري التفعيل…';
+  setTimeout(()=>{
+    state.isPremium = true;
+    document.getElementById('premiumBadge').textContent = isEn ? '✓ Booking on' : '✓ الحجز مفعّل';
+    closePremium();
+    showToast(isEn ? '🎉 Real booking enabled (demo)! You can now book partner hotels & families.' : '🎉 تفعّل الحجز الفعلي (تجريبي)! تقدر الحين تحجز فنادق وعوائل شريكة.');
+    if(state.tripConfirmed) showToolbar();
+    persist();
+  }, 1100);
+}
+
+function deactivatePremium(){
+  state.isPremium = false;
+  const isEn = state.language==='en';
+  document.getElementById('premiumBadge').textContent = isEn ? '🏨 Booking' : '🏨 الحجز';
+  closePremium();
+  showToast(isEn ? 'Real booking turned off (demo).' : 'تم إلغاء تفعيل الحجز الفعلي (تجريبي).');
+  if(state.tripConfirmed) showToolbar();
+  persist();
+}
+
+/* ============ بروتوكول الوسوم الخاصة داخل رد Claude ============ */
+function parseSpecialTags(raw){
+  let text = raw;
+  let quickReplies = null, setState = null, setBudget = null, budgetUpdate = null, bookRequest = null;
+
+  const qr = text.match(/\[QUICK_REPLIES:\s*([^\]]+)\]/i);
+  if(qr){ quickReplies = qr[1].split('|').map(s=>s.trim()).filter(Boolean); text = text.replace(qr[0], ''); }
+
+  const br = text.match(/\[BOOK_REQUEST:\s*([^\]]+)\]/i);
+  if(br){
+    bookRequest = { type:'', name:'' };
+    br[1].split(';').forEach(p=>{
+      const i = p.indexOf('=');
+      if(i>-1){ const k=p.slice(0,i).trim(), v=p.slice(i+1).trim(); if(k) bookRequest[k]=v; }
+    });
+    text = text.replace(br[0], '');
+  }
+
+  const ss = text.match(/\[SET_STATE:\s*([^\]]+)\]/i);
+  if(ss){
+    setState = {};
+    ss[1].split(';').forEach(pair=>{
+      const idx = pair.indexOf('=');
+      if(idx>-1){
+        const k = pair.slice(0, idx).trim();
+        const v = pair.slice(idx+1).trim();
+        if(k) setState[k] = v;
+      }
+    });
+    text = text.replace(ss[0], '');
+  }
+
+  const sb = text.match(/\[SET_BUDGET:\s*total=([\d.]+)\]/i);
+  if(sb){ setBudget = { total: parseFloat(sb[1]) }; text = text.replace(sb[0], ''); }
+
+  const bu = text.match(/\[BUDGET_UPDATE:\s*spent=([\d.]+)\]/i);
+  if(bu){ budgetUpdate = { spent: parseFloat(bu[1]) }; text = text.replace(bu[0], ''); }
+
+  return { cleanText: text.trim(), quickReplies, setState, setBudget, budgetUpdate, bookRequest };
+}
+
+function showToolbar(){
+  const isEn = state.language==='en';
+  const tb = document.getElementById('toolbar');
+  const trackOn = state.liveTracking;
+  const trackLabel = trackOn ? (isEn?'Stop tracking':'إيقاف التتبّع') : (isEn?'Live tracking':'تتبّع مباشر');
+  tb.innerHTML = `
+    <button class="tool-btn ${trackOn?'active':''}" onclick="toggleLiveTrack()">🛰️ ${trackLabel}</button>
+    <button class="tool-btn" onclick="testWeatherAlert()">🧪 ${isEn?'Test weather alert':'اختبار تنبيه الطقس'}</button>
+    <button class="tool-btn" onclick="testTrafficAlert()">🧪 ${isEn?'Test traffic alert':'اختبار الازدحام'}</button>`;
+  tb.style.display = 'flex';
+  const pin = document.getElementById('pinBtn');
+  pin.style.display = 'flex';
+  pin.title = isEn ? 'Share my live location' : 'شارك موقعي الحالي';
+}
+
+function renderAssistantReply(raw){
+  const parsed = parseSpecialTags(raw);
+
+  if(parsed.setState){
+    const prevDestination = state.destination;
+    Object.assign(state, parsed.setState);
+    if(state.destination && state.destination !== prevDestination){
+      geocodeDestination(state.destination).then(c => { if(c) state.destCoords = c; });
+    }
+  }
+  if(parsed.setBudget){
+    state.budgetTotal = parsed.setBudget.total;
+    if(state.budgetSpent == null) state.budgetSpent = 0;
+    renderBudgetCard();
+  }
+  if(parsed.budgetUpdate){
+    state.budgetSpent = (state.budgetSpent||0) + parsed.budgetUpdate.spent;
+  }
+
+  const looksLikeItinerary = (parsed.cleanText.match(/\|/g)||[]).length > 6;
+  addBubble('assistant', parsed.cleanText, { isItinerary: looksLikeItinerary });
+
+  if(parsed.budgetUpdate) renderBudgetCard();
+
+  if(looksLikeItinerary){
+    state.tripConfirmed = true;
+    showToolbar();
+    maybeStartMonitoring();
+  }
+  if(parsed.quickReplies && parsed.quickReplies.length){
+    addQuickReplies(parsed.quickReplies);
+  }
+  if(parsed.bookRequest){
+    handleBookingRequest(parsed.bookRequest);
+  }
+  persist(); // احفظ الحالة بعد كل رد
+}
+
+/* ============ الحجز الفعلي (ميزة بريميوم) ============ */
+function handleBookingRequest(req){
+  const isEn = state.language==='en';
+  const typeLabel = req.type==='homestay'
+    ? (isEn?'Omani family homestay':'استضافة مع عائلة عُمانية')
+    : (isEn?'hotel':'فندق');
+  const place = req.name || (isEn?'the selected place':'المكان المختار');
+
+  if(!state.isPremium){
+    // بوابة بريميوم: التخطيط مجاني، بس الحجز الفعلي بريميوم
+    const card = document.createElement('div');
+    card.className = 'itin-card';
+    card.style.borderRight = '3px solid #FFA500';
+    card.innerHTML = `<div style="font-weight:700;margin-bottom:6px">🏨 ${isEn?'This needs Real Booking':'هذا يحتاج تفعيل الحجز الفعلي'}</div>
+      <div style="font-size:12px;color:#444;margin-bottom:8px">${isEn
+        ? `Planning and suggestions are free. To actually book <b>${place}</b> (${typeLabel}) with our partners, enable Real Booking.`
+        : `التخطيط والاقتراحات مجانية. عشان نحجز لك <b>${place}</b> (${typeLabel}) حجز فعلي مع شركائنا، فعّل الحجز الفعلي.`}</div>
+      <button class="pdf-btn" style="background:linear-gradient(135deg,#FFD700,#FFA500);color:#5c4a13" onclick="openPremium()">${isEn?'🏨 Enable booking':'🏨 فعّل الحجز'}</button>`;
+    document.getElementById('messages').appendChild(card);
+    scrollBottom();
+    return;
+  }
+
+  // بريميوم مفعّل → تأكيد حجز تجريبي + حفظه بقاعدة البيانات
+  const ref = 'RQ' + Math.floor(100000 + Math.random()*899999);
+  state.bookings.push({ ref, type:req.type||'hotel', name:place, at:new Date().toISOString() });
+  persist();
+  const card = document.createElement('div');
+  card.className = 'itin-card';
+  card.style.borderRight = '3px solid #128C7E';
+  card.innerHTML = `<div style="font-weight:700;margin-bottom:6px">✅ ${isEn?'Booking request sent (demo)':'تم إرسال طلب الحجز (تجريبي)'}</div>
+    <div style="font-size:12px;color:#444;line-height:1.8">
+      ${isEn?'Place':'المكان'}: <b>${place}</b><br>
+      ${isEn?'Type':'النوع'}: ${typeLabel}<br>
+      ${isEn?'Reference':'رقم الطلب'}: <b>${ref}</b>
+    </div>
+    <div style="font-size:11px;color:#888;margin-top:6px">${isEn?'A partner will confirm availability shortly.':'الشريك بيأكد لك التوفّر قريباً.'}</div>`;
+  document.getElementById('messages').appendChild(card);
+  scrollBottom();
+}
+
+/* ============ System prompt الديناميكي ============ */
+function buildSystemPrompt(){
+  const langBlock = state.language === 'en'
+    ? `### اللغة الإلزامية: الإنجليزية الودودة الطبيعية فقط (بأسلوب واتساب القصير).
+- كل ردودك بدون أي استثناء بالإنجليزية (ما عدا أسماء الأماكن والروابط).
+- ممنوع منعاً تاماً الرد بالعربية، حتى لو كتب المستخدم بالعربية — رد بالإنجليزية وبس.
+- قبل ما ترسل، تأكد إن ردك كله إنجليزي.`
+    : `### اللغة الإلزامية: العربية باللهجة العُمانية الدارجة الودودة فقط (غير رسمية، بأسلوب واتساب القصير).
+- كل ردودك بدون أي استثناء بالعربية العُمانية (ما عدا أسماء الأماكن والروابط).
+- ممنوع منعاً تاماً الرد بالإنجليزية أو بالفصحى الجامدة، حتى لو ورد نص إنجليزي بالرسالة — رد بالعُماني وبس.
+- قبل ما ترسل، تأكد إن ردك كله بالعربية العُمانية.`;
+
+  const snapshot = JSON.stringify({
+    name: state.name, age: state.age, destination: state.destination,
+    startDate: state.startDate, duration: state.duration,
+    companions: state.companions, specialNeeds: state.specialNeeds,
+    healthConditions: state.healthConditions, accommodationType: state.accommodationType,
+    experienceTypes: state.experienceTypes,
+    budgetTotal: state.budgetTotal, budgetSpent: state.budgetSpent,
+    budgetRemaining: state.budgetTotal!=null ? (state.budgetTotal-(state.budgetSpent||0)) : null,
+    isPremium: state.isPremium
+  });
+
+  return `أنت "رحلتك" (Rehlatak) — وكيل سفر ذكي يعمل عبر واتساب.
+${langBlock}
+
+الحالة الحالية المعروفة عن المستخدم (JSON للسياق فقط، لا تعرضها كما هي للمستخدم):
+${snapshot}
+
+قواعد صارمة تتبعها بالحرف:
+1. الاسم والعمر إذا كانا موجودين بالحالة أعلاه فلا تكرر سؤالهما.
+2. اسأل بقية أسئلة التخطيط سؤال واحد بس بكل رسالة، بهالترتيب: الوجهة، تاريخ السفر، مدة الرحلة، الميزانية التقريبية بالريال العُماني، عدد المرافقين وأعمارهم التقريبية، أي احتياجات خاصة أو حالات صحية تؤثر على النشاطات، نوع الإقامة (فندق / شقة فندقية / استضافة مع عائلة عُمانية)، نوع التجربة (استرخاء / ثقافة / مغامرة / عائلية - يقدر يختار أكثر من وحدة).
+3. لأي سؤال إجاباته محدودة ومعروفة مسبقاً (نوع الإقامة، نوع التجربة، أسئلة نعم/لا)، أضف بآخر ردك سطر منفصل بهالشكل بالضبط: [QUICK_REPLIES: خيار1 | خيار2 | خيار3] بدل ما يكتبها المستخدم. بالنسبة لسؤال الميزانية، اعرض مبالغ تقريبية شائعة بالريال العُماني كخيارات (مثل: 150 ر.ع | 300 ر.ع | 500 ر.ع | مبلغ آخر). لا تستخدم QUICK_REPLIES مع الأسئلة المفتوحة تماماً (الوجهة، التاريخ).
+4. أي معلومة يأكدها المستخدم، سجّلها فوراً بسطر منفصل بآخر ردك بهالشكل بالضبط: [SET_STATE: field=value; field2=value2] — استخدم هالأسماء بالضبط: name, age, destination, startDate, duration, companions, specialNeeds, healthConditions, accommodationType, experienceTypes. لا تعرض هالسطر كنص عادي للمستخدم.
+5. لما يتحدد الميزانية الكلية بالريال العُماني، أضف سطر منفصل: [SET_BUDGET: total=NUMBER] (رقم فقط بدون وحدة).
+6. اربط أي معلومة عمرية أو صحية بالخطة (لا تقترح مسارات طويلة أو متعبة لكبار السن أو من عنده صعوبة مشي).
+7. بعد جمع كل الإجابات: ابنِ خطة رحلة يومية كاملة كجدول Markdown بالضبط بهالشكل (سطر رأس، سطر فاصل بـ---، ثم صفوف): | اليوم | الوقت | النشاط | الموقع |. اكتب بخانة الموقع اسم المكان فقط بدون روابط (النظام يضيف روابط خرائط جوجل تلقائياً). بعد الجدول جملة قصيرة تخبره إن فيه خيار تحميل PDF فيه روابط خرائط لكل موقع.
+8. أي رسالة تبدأ بـ [نظام] هي حدث داخلي تلقائي (ليست من المستخدم مباشرة) — نفّذ التعليمات المكتوبة داخلها بالضبط:
+   • إذا كانت عن طقس خطير أو ازدحام/إغلاق طريق: صُغها كتنبيه استباقي يبدأ بـ 🔔، اشرح المشكلة والسبب بإيجاز، اقترح بديل واحد مناسب لملف المستخدم (عمره وحالته الصحية)، واطلب موافقته بإضافة: [QUICK_REPLIES: أوافق، بدّلها | لا، خليها زي ما هي].
+   • إذا كانت مجرد تحديث موقع/تتبّع عادي بدون خطر: رد برسالة قصيرة جداً ودّية (بدون 🔔 وبدون أزرار تبديل) — ملاحظة مفيدة إذا قريب من نشاط، وإلا تأكيد بسيط إنك متابع رحلته.
+9. إذا وافق المستخدم على تبديل مقترح سابق أو طلب أي تعديل بالخطة، أعد كتابة جدول الخطة **كامل** ومحدث بنفس صيغة القاعدة 7.
+10. إذا ذكر المستخدم إنه صرف مبلغ إضافي فوق المخطط، استخرج المبلغ الإضافي فقط (وليس الإجمالي) وأضف: [BUDGET_UPDATE: spent=NUMBER]. النظام يحسب المتبقي تلقائياً ويعرضه، وبعدها عدّل اقتراحاتك القادمة لتناسب المتبقي المذكور بالحالة أعلاه.
+11. حافظ على أسلوب رسائل واتساب: قصيرة، إيموجيات مناسبة بدون إفراط، بدون فقرات طويلة.
+12. لا تخرج عن اللغة المختارة أبداً إلا بأسماء الأماكن.
+13. الحجز الفعلي ميزة بريميوم: اقتراح الفنادق والاستضافات والمقارنة بينها **مجاني** — سولف واقترح بحرية. لكن لحظة ما يطلب المستخدم **حجز فعلي** لفندق محدد أو استضافة مع عائلة عُمانية (كلمات مثل: احجزلي، أبي أحجز، ثبّت الحجز)، لا تأكد الحجز بنفسك؛ بدل ذلك أضف بآخر ردك سطر منفصل: [BOOK_REQUEST: type=hotel|homestay; name=اسم المكان]. النظام يتكفّل بالباقي (يطلب تفعيل الحجز إذا مو مفعّل، أو يأكد الطلب إذا مفعّل). خلّ نص ردك قصير ومناسب (مثلاً: "تمام، بجهّز لك الحجز 👇").
+14. تحديث الخطة اللحظي أثناء الرحلة: أي تنبيه [نظام] عن طقس خطير أو ازدحام تعامل معه حسب القاعدة 8 (تنبيه + اقتراح تبديل أو تثبيت). وإذا وافق المستخدم على التبديل، أعد كتابة الجدول كامل (القاعدة 9). خلّك متاح دايم للأسئلة السريعة أثناء الرحلة (ميزانية، أوقات، بدائل).`;
+}
+
+async function callClaude(){
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-6",
+      max_tokens: 1200,
+      system: buildSystemPrompt(),
+      messages: messages
+    })
+  });
+  const data = await response.json();
+  return (data.content || []).map(b => b.text || '').join('\n').trim();
+}
+
+/* ============ إرسال الرسائل ============ */
+async function sendMessage(presetText){
+  const input = document.getElementById('userInput');
+  const text = presetText !== undefined ? presetText : input.value.trim();
+  if(!text) return;
+  if(!state.language) setLanguageSilent(detectLang(text)); // اللغة لازم تكون مضبوطة قبل أي طلب
+  addBubble('user', text);
+  messages.push({ role:'user', content: text });
+  if(presetText === undefined) input.value = '';
+  document.getElementById('sendBtn').disabled = true;
+  showTyping();
+  try{
+    const reply = await callClaude();
+    hideTyping();
+    messages.push({ role:'assistant', content: reply });
+    renderAssistantReply(reply);
+  }catch(err){
+    hideTyping();
+    addBubble('assistant', state.language==='en' ? "Sorry, connection issue. Please try again 🙏" : 'عذراً، صار خلل بالاتصال. جرب ترسل رسالتك مرة ثانية 🙏');
+    console.error(err);
+  }
+  document.getElementById('sendBtn').disabled = false;
+}
+
+async function triggerSystemEvent(hiddenText){
+  messages.push({ role:'user', content: hiddenText });
+  showTyping();
+  try{
+    const reply = await callClaude();
+    hideTyping();
+    messages.push({ role:'assistant', content: reply });
+    renderAssistantReply(reply);
+  }catch(e){ hideTyping(); console.error(e); }
+}
+
+/* ============ نظام اللغة (ثابت وقابل للتبديل) ============ */
+// يكتشف لغة النص: إذا فيه حروف عربية => لهجة عُمانية، وإلا إنجليزي
+function detectLang(text){
+  return /[\u0600-\u06FF]/.test(text || '') ? 'ar-om' : 'en';
+}
+
+// يحدّث عناصر الواجهة حسب اللغة (بدون رسائل)
+function applyLanguageUI(lang){
+  const isEn = lang==='en';
+  document.getElementById('statusline').textContent = isEn ? 'Online now' : 'متصل الآن';
+  document.getElementById('userInput').placeholder = isEn ? 'Type your message...' : 'اكتب رسالتك...';
+  const pin = document.getElementById('pinBtn');
+  if(pin) pin.title = isEn ? 'Share my live location' : 'شارك موقعي الحالي';
+  updateBudgetPill();
+  if(state.tripConfirmed) showToolbar(); // يعيد بناء الأزرار باللغة الصحيحة
+}
+
+// يضبط اللغة بصمت (يُستعمل لو المستخدم كتب قبل ما يختار)
+function setLanguageSilent(lang){
+  state.language = lang; state.greeted = true;
+  const r = document.getElementById('langChoiceRow'); if(r) r.remove();
+  applyLanguageUI(lang);
+  persist();
+}
+
+// الاختيار الرئيسي للغة (أول مرة أو تبديل لاحق) — بدون استدعاء API لأول تحية
+function chooseLanguage(lang){
+  state.language = lang;
+  const r = document.getElementById('langChoiceRow'); if(r) r.remove();
+  applyLanguageUI(lang);
+  if(!state.greeted){
+    state.greeted = true;
+    addBubble('assistant', lang==='en'
+      ? "Great! 🙌 Before we plan your trip — what's your name, and how old are you?"
+      : "زين 🙌 قبل لا نبدأ التخطيط، ودّي أتعرف عليك: شنو اسمك، وكم عمرك؟");
+    persist();
+  } else if(messages.length){
+    // تبديل اللغة وسط المحادثة: نخبر الوكيل يكمّل باللغة الجديدة
+    triggerSystemEvent(lang==='en'
+      ? `[نظام] The user switched the language to English. From now on reply ONLY in natural English for the rest of the conversation. Confirm briefly then continue.`
+      : `[نظام] المستخدم غيّر اللغة إلى العربية العُمانية. من الحين كل ردودك تكون بالعربية العُمانية الدارجة فقط. أكّد بجملة قصيرة وكمّل.`);
+  } else {
+    showToast(lang==='en' ? 'Language set to English' : 'تم ضبط اللغة على العربية العُمانية');
+  }
+}
+
+// صف أزرار اختيار اللغة
+function addLanguageChoice(promptText){
+  if(promptText) addBubble('assistant', promptText);
+  const container = document.getElementById('messages');
+  const old = document.getElementById('langChoiceRow'); if(old) old.remove();
+  const row = document.createElement('div');
+  row.className = 'quick-replies'; row.id = 'langChoiceRow';
+  [['العربية 🇴🇲','ar-om'], ['English 🇬🇧','en']].forEach(([label,lang])=>{
+    const b = document.createElement('button');
+    b.className = 'qr-btn'; b.textContent = label;
+    b.onclick = () => chooseLanguage(lang);
+    row.appendChild(b);
+  });
+  container.appendChild(row); scrollBottom();
+}
+
+// زر 🌐 بالهيدر: يخلي المستخدم يغيّر اللغة بأي وقت
+function showLangPicker(){
+  addLanguageChoice(state.language==='en'
+    ? "Which language would you like me to use?"
+    : "بأي لغة تحب أكلّمك؟");
+}
+
+/* ============ الإقلاع: يتعرف على المستخدم الراجع ============ */
+const WELCOME_NEW = "👋 هلا وغلا! أنا رحلتك، وكيلك الذكي للسفر 🌴\nWelcome! I'm Rehlatak, your smart AI travel agent.\n\nبأي لغة تحب نسولف؟ / Which language would you like to chat in?";
+
+function boot(){
+  const db = loadDB();
+  if(db && db.profile && db.profile.name){
+    welcomeBack(db);
+  } else {
+    addBubble('assistant', WELCOME_NEW);
+    addLanguageChoice();
+  }
+}
+
+function welcomeBack(db){
+  state.userId = db.userId || state.userId;
+  state.language = db.language || 'ar-om';
+  state.isPremium = !!db.isPremium;
+  state.greeted = true;
+  const p = db.profile || {};
+  ['name','age','companions','specialNeeds','healthConditions','accommodationType','experienceTypes']
+    .forEach(k=>{ if(p[k]!=null) state[k] = p[k]; });
+  state._lastTrip = db.lastTrip || null;
+  state.bookings = db.bookings || [];
+  applyLanguageUI(state.language);
+  const isEn = state.language==='en';
+  if(state.isPremium){
+    document.getElementById('premiumBadge').textContent = isEn ? '✓ Booking on' : '✓ الحجز مفعّل';
+  }
+  const name = state.name || '';
+  addBubble('assistant', isEn
+    ? `👋 Welcome back${name?', '+name:''}! Good to see you again 🌴 What would you like to do?`
+    : `👋 حيّاك الله${name?' يا '+name:''}! رجعت لنا 🌴 شرايك نسوي شنو؟`);
+  const opts = [ isEn?'🆕 New plan (keep my info)':'🆕 خطة جديدة بنفس بياناتي' ];
+  if(state._lastTrip && state._lastTrip.itinerary) opts.push(isEn?'📋 Show my last plan':'📋 عرض آخر خطة');
+  opts.push(isEn?'♻️ Start fresh':'♻️ ابدأ من جديد');
+  opts.push(isEn?'🗑️ Clear my data':'🗑️ امسح بياناتي');
+  addQuickReplies(opts, (opt)=>{
+    if(opt.includes('New plan') || opt.includes('خطة جديدة')) startNewPlanWithProfile();
+    else if(opt.includes('last plan') || opt.includes('آخر خطة')) showLastPlan();
+    else if(opt.includes('Clear') || opt.includes('امسح')) clearData();
+    else startFresh();
+  });
+}
+
+function startNewPlanWithProfile(){
+  state.destination=null; state.destCoords=null; state.startDate=null; state.duration=null;
+  state.budgetTotal=null; state.budgetSpent=0; state.tripConfirmed=false;
+  state.lastAlertedDay=null; state.currentCoords=null; latestItinerary=null;
+  stopLiveTrack();
+  const old=document.getElementById('budgetCard'); if(old) old.remove();
+  updateBudgetPill();
+  messages = [];
+  const isEn = state.language==='en';
+  addBubble('assistant', isEn
+    ? "Great — let's plan a new trip. I still have your info saved 🌟"
+    : "زين — بنخطط رحلة جديدة، وبياناتك محفوظة عندي 🌟");
+  triggerSystemEvent(isEn
+    ? `[نظام] Returning user wants a NEW trip plan. Their personal profile (name, age, companions, needs, preferences) is already in the state above — do NOT ask about those again. Start directly by asking about the new destination.`
+    : `[نظام] المستخدم رجع ويبي خطة رحلة جديدة. بياناته الشخصية (الاسم، العمر، المرافقين، الاحتياجات، التفضيلات) موجودة بالحالة فوق — لا تسأل عنها مرة ثانية. ابدأ مباشرة بسؤال الوجهة الجديدة.`);
+}
+
+function showLastPlan(){
+  const t = state._lastTrip;
+  const isEn = state.language==='en';
+  if(!t || !t.itinerary){ showToast(isEn?'No saved plan.':'ما فيه خطة محفوظة.'); return; }
+  state.destination = t.destination || state.destination;
+  state.startDate = t.startDate; state.duration = t.duration;
+  state.budgetTotal = t.budgetTotal; state.budgetSpent = t.budgetSpent||0;
+  if(state.destination){ geocodeDestination(state.destination).then(c=>{ if(c) state.destCoords=c; }); }
+  addBubble('assistant', isEn?'Here is your last saved plan 👇':'هذي آخر خطة محفوظة لك 👇');
+  addBubble('assistant', t.itinerary, { isItinerary:true });
+  if(state.budgetTotal!=null) renderBudgetCard();
+  state.tripConfirmed = true;
+  showToolbar();
+  messages = [
+    { role:'user', content:'[نظام] استرجاع آخر خطة محفوظة للمستخدم لمتابعتها أو تعديلها.' },
+    { role:'assistant', content: t.itinerary }
+  ];
+}
+
+function startFresh(){
+  state = { language:null, name:null, age:null, destination:null, destCoords:null,
+    startDate:null, duration:null, companions:null, specialNeeds:null, healthConditions:null,
+    accommodationType:null, experienceTypes:null, budgetTotal:null, budgetSpent:0,
+    isPremium:false, tripConfirmed:false, lastAlertedDay:null, greeted:false,
+    liveTracking:false, currentCoords:null, bookings:[], userId: state.userId };
+  messages=[]; latestItinerary=null;
+  document.getElementById('messages').innerHTML='';
+  document.getElementById('budgetPill').style.display='none';
+  document.getElementById('toolbar').style.display='none';
+  document.getElementById('pinBtn').style.display='none';
+  document.getElementById('premiumBadge').textContent = '🏨 الحجز';
+  addBubble('assistant', WELCOME_NEW);
+  addLanguageChoice();
+}
+
+boot();
+</script>
+
+</body>
+</html>
